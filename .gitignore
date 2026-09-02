@@ -1,0 +1,44 @@
+# Terraform working directories
+**/.terraform/*
+
+# Terraform state contains infrastructure details and can contain sensitive data
+*.tfstate
+*.tfstate.*
+
+# Terraform plans
+*.tfplan
+tfplan
+
+# Terraform crash logs
+crash.log
+crash.*.log
+
+# Local Terraform overrides
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Terraform CLI configuration
+.terraformrc
+terraform.rc
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Scanner and test output
+*.sarif
+coverage/
+reports/
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Operating systems
+.DS_Store
+Thumbs.db
