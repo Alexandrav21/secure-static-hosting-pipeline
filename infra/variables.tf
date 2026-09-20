@@ -19,3 +19,8 @@ variable "log_bucket_name" {
   description = "Globally unique name for the CloudFront log bucket."
   type        = string
 }
+
+variable "allowed_countries" {
+  description = "Countries allowed to access the CloudFront distribution."
+  type        = list(string)
+}

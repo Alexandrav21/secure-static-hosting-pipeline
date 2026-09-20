@@ -21,6 +21,7 @@ module "cloudfront" {
   project_name                     = var.project_name
   site_bucket_arn                  = module.s3.site_bucket_arn
   site_bucket_regional_domain_name = module.s3.site_bucket_regional_domain_name
+  allowed_countries                = var.allowed_countries
 }
 
 data "aws_iam_policy_document" "kms" {

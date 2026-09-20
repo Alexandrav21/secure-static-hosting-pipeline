@@ -12,3 +12,8 @@ variable "site_bucket_regional_domain_name" {
   description = "Regional domain name of the private S3 site bucket."
   type        = string
 }
+
+variable "allowed_countries" {
+  description = "ISO 3166-1 alpha-2 country codes allowed to access the distribution."
+  type        = list(string)
+}
