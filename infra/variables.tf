@@ -40,3 +40,13 @@ variable "sns_email" {
   type        = string
   sensitive   = true
 }
+
+variable "domain_name" {
+  description = "Custom domain name for the site."
+  type        = string
+}
+
+variable "hosted_zone_id" {
+  description = "Route 53 hosted zone ID."
+  type        = string
+}

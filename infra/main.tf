@@ -104,3 +104,14 @@ module "monitoring" {
   cloudfront_distribution_id = module.cloudfront.distribution_id
   sns_email                  = var.sns_email
 }
+
+module "acm" {
+  source = "./modules/acm"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+
+  domain_name    = var.domain_name
+  hosted_zone_id = var.hosted_zone_id
+}
