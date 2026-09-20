@@ -46,4 +46,3 @@ A security-first and cost-conscious static website hosting pipeline on AWS, buil
 - Apply short log-retention policies
 - Create budget alerts before application resources
 - Destroy chargeable resources after project review
-

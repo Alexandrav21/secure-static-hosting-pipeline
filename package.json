@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "scripts": {
+    "lint:prettier": "prettier --check \"**/*.{yml,yaml,json,md}\"",
+    "lint:terraform": "terraform fmt -check -recursive infra",
+    "lint:yaml": "yamllint .github",
+    "lint": "bash -c 'status=0; pnpm lint:prettier || status=1; pnpm lint:terraform || status=1; pnpm lint:yaml || status=1; exit $status'",
+    "lint:fix": "prettier --write \"**/*.{yml,yaml,json,md}\" && terraform fmt -recursive infra && yamllint .github"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}

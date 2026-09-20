@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+set -u
+
+echo "Running pre-commit checks..."
+echo
+
+pnpm lint
+status=$?
+
+if [ "$status" -ne 0 ]; then
+  echo
+  echo "Pre-commit checks failed."
+  echo "Fix the issues above, or run:"
+  echo
+  echo "  pnpm lint:fix"
+  echo
+  exit "$status"
+fi
+
+echo
+echo "Pre-commit checks passed."
