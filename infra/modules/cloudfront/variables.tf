@@ -17,3 +17,13 @@ variable "allowed_countries" {
   description = "ISO 3166-1 alpha-2 country codes allowed to access the distribution."
   type        = list(string)
 }
+
+variable "domain_name" {
+  description = "Custom domain name for the CloudFront distribution."
+  type        = string
+}
+
+variable "certificate_arn" {
+  description = "ACM certificate ARN for the CloudFront distribution."
+  type        = string
+}

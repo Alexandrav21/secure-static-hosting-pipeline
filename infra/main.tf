@@ -22,6 +22,8 @@ module "cloudfront" {
   site_bucket_arn                  = module.s3.site_bucket_arn
   site_bucket_regional_domain_name = module.s3.site_bucket_regional_domain_name
   allowed_countries                = var.allowed_countries
+  domain_name                      = var.domain_name
+  certificate_arn                  = module.acm.certificate_arn
 }
 
 data "aws_iam_policy_document" "kms" {
@@ -114,4 +116,13 @@ module "acm" {
 
   domain_name    = var.domain_name
   hosted_zone_id = var.hosted_zone_id
+}
+
+module "route53" {
+  source = "./modules/route53"
+
+  domain_name               = var.domain_name
+  hosted_zone_id            = var.hosted_zone_id
+  cloudfront_domain_name    = module.cloudfront.distribution_domain_name
+  cloudfront_hosted_zone_id = module.cloudfront.hosted_zone_id
 }
