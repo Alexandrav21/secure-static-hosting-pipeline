@@ -9,3 +9,13 @@ variable "project_name" {
   type        = string
   default     = "secure-static-site"
 }
+
+variable "site_bucket_name" {
+  description = "Globally unique name for the private site bucket."
+  type        = string
+}
+
+variable "log_bucket_name" {
+  description = "Globally unique name for the CloudFront log bucket."
+  type        = string
+}

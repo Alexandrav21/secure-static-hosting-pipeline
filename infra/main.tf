@@ -3,3 +3,12 @@ module "kms" {
 
   project_name = var.project_name
 }
+
+module "s3" {
+  source = "./modules/s3"
+
+  project_name     = var.project_name
+  kms_key_arn      = module.kms.key_arn
+  site_bucket_name = var.site_bucket_name
+  log_bucket_name  = var.log_bucket_name
+}
