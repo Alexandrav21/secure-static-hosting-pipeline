@@ -48,6 +48,12 @@ resource "aws_cloudfront_distribution" "this" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
+
+  lifecycle {
+    ignore_changes = [
+      web_acl_id,
+    ]
+  }
 }
 
 data "aws_iam_policy_document" "site_bucket" {
