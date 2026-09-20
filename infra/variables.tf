@@ -34,3 +34,9 @@ variable "github_repository" {
   description = "GitHub repository name."
   type        = string
 }
+
+variable "sns_email" {
+  description = "Email address used for monitoring notifications."
+  type        = string
+  sensitive   = true
+}

@@ -93,3 +93,14 @@ module "iam" {
   kms_key_arn                 = module.kms.key_arn
   cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }
+
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  providers = {
+    aws = aws.us_east_1
+  }
+
+  cloudfront_distribution_id = module.cloudfront.distribution_id
+  sns_email                  = var.sns_email
+}
