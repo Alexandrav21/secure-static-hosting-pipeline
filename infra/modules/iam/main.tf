@@ -32,7 +32,7 @@ data "aws_iam_policy_document" "github_actions_trust" {
       variable = "token.actions.githubusercontent.com:sub"
 
       values = [
-        "repo:${var.github_owner}/${var.github_repository}:ref:refs/heads/${var.github_branch}",
+        "repo:${var.github_owner}@122618599/${var.github_repository}@1354663866:ref:refs/heads/${var.github_branch}",
       ]
     }
   }
