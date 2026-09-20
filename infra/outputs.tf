@@ -17,3 +17,8 @@ output "cloudfront_domain_name" {
   description = "CloudFront distribution domain name."
   value       = module.cloudfront.distribution_domain_name
 }
+
+output "github_actions_role_arn" {
+  description = "ARN of the GitHub Actions IAM role."
+  value       = module.iam.github_actions_role_arn
+}

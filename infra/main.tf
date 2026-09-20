@@ -83,3 +83,10 @@ resource "aws_kms_key_policy" "this" {
   key_id = module.kms.key_id
   policy = data.aws_iam_policy_document.kms.json
 }
+
+module "iam" {
+  source = "./modules/iam"
+
+  github_owner      = var.github_owner
+  github_repository = var.github_repository
+}
