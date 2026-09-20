@@ -10,6 +10,10 @@ data "aws_cloudfront_cache_policy" "caching_optimized" {
   name = "Managed-CachingOptimized"
 }
 
+data "aws_cloudfront_response_headers_policy" "security" {
+  name = "Managed-SecurityHeadersPolicy"
+}
+
 resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   default_root_object = "index.html"
@@ -35,8 +39,9 @@ resource "aws_cloudfront_distribution" "this" {
       "HEAD",
     ]
 
-    compress        = true
-    cache_policy_id = data.aws_cloudfront_cache_policy.caching_optimized.id
+    compress                   = true
+    cache_policy_id            = data.aws_cloudfront_cache_policy.caching_optimized.id
+    response_headers_policy_id = data.aws_cloudfront_response_headers_policy.security.id
   }
 
   restrictions {
