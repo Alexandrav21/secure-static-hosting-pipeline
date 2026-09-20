@@ -87,6 +87,9 @@ resource "aws_kms_key_policy" "this" {
 module "iam" {
   source = "./modules/iam"
 
-  github_owner      = var.github_owner
-  github_repository = var.github_repository
+  github_owner                = var.github_owner
+  github_repository           = var.github_repository
+  site_bucket_arn             = module.s3.site_bucket_arn
+  kms_key_arn                 = module.kms.key_arn
+  cloudfront_distribution_arn = module.cloudfront.distribution_arn
 }

@@ -13,3 +13,18 @@ variable "github_branch" {
   type        = string
   default     = "main"
 }
+
+variable "site_bucket_arn" {
+  description = "ARN of the S3 bucket containing the static site."
+  type        = string
+}
+
+variable "kms_key_arn" {
+  description = "ARN of the KMS key used to encrypt site objects."
+  type        = string
+}
+
+variable "cloudfront_distribution_arn" {
+  description = "ARN of the CloudFront distribution."
+  type        = string
+}

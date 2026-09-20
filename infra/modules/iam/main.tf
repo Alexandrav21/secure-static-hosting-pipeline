@@ -42,3 +42,67 @@ resource "aws_iam_role" "github_actions" {
   name               = "SecureStaticSiteGitHubActionsRole"
   assume_role_policy = data.aws_iam_policy_document.github_actions_trust.json
 }
+
+data "aws_iam_policy_document" "github_actions_deploy" {
+  statement {
+    sid    = "ListSiteBucket"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      var.site_bucket_arn,
+    ]
+  }
+
+  statement {
+    sid    = "ManageSiteObjects"
+    effect = "Allow"
+
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:DeleteObject",
+    ]
+
+    resources = [
+      "${var.site_bucket_arn}/*",
+    ]
+  }
+
+  statement {
+    sid    = "UseSiteKMSKey"
+    effect = "Allow"
+
+    actions = [
+      "kms:Decrypt",
+      "kms:Encrypt",
+      "kms:GenerateDataKey*",
+    ]
+
+    resources = [
+      var.kms_key_arn,
+    ]
+  }
+
+  statement {
+    sid    = "InvalidateCloudFrontCache"
+    effect = "Allow"
+
+    actions = [
+      "cloudfront:CreateInvalidation",
+    ]
+
+    resources = [
+      var.cloudfront_distribution_arn,
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "github_actions_deploy" {
+  name   = "SecureStaticSiteDeploymentPolicy"
+  role   = aws_iam_role.github_actions.id
+  policy = data.aws_iam_policy_document.github_actions_deploy.json
+}
