@@ -14,7 +14,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: "1.15.6"
+          terraform_wrapper: false
 
       - name: Enable pnpm
         run: corepack enable
@@ -27,11 +34,6 @@ jobs:
 
       - name: Check site integrity
         run: ./scripts/check-site-integrity.sh
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v4
-        with:
-          terraform_version: "1.15.6"
 
       - name: Validate Terraform
         working-directory: infra
