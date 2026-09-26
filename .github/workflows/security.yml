@@ -14,17 +14,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
-      - name: Scan Terraform
-        uses: aquasecurity/trivy-action@v0.36.0
+      - name: Setup Python
+        uses: actions/setup-python@v6
         with:
-          scan-type: config
-          scan-ref: infra
-          severity: HIGH,CRITICAL
-          exit-code: "1"
+          python-version: "3.x"
 
-      - name: Scan repository
+      - name: Install Checkov
+        run: pip install checkov
+
+      - name: Scan Terraform with Checkov
+        run: checkov -d infra --framework terraform
+
+      - name: Scan repository with Grype
         uses: anchore/scan-action@v7
         with:
           path: .
