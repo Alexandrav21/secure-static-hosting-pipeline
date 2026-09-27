@@ -9,7 +9,6 @@ data "aws_caller_identity" "current" {}
 module "s3" {
   source = "./modules/s3"
 
-  project_name     = var.project_name
   kms_key_arn      = module.kms.key_arn
   site_bucket_name = var.site_bucket_name
   log_bucket_name  = var.log_bucket_name
@@ -27,6 +26,10 @@ module "cloudfront" {
 }
 
 data "aws_iam_policy_document" "kms" {
+  #checkov:skip=CKV_AWS_109:KMS key policies use Resource "*" because the key policy itself scopes permissions to this key.
+  #checkov:skip=CKV_AWS_111:KMS key policies use Resource "*" because the key policy itself scopes permissions to this key.
+  #checkov:skip=CKV_AWS_356:KMS key policies use Resource "*" because the key policy itself scopes permissions to this key.
+
   statement {
     sid    = "EnableIAMUserPermissions"
     effect = "Allow"

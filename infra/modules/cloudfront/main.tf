@@ -15,6 +15,10 @@ data "aws_cloudfront_response_headers_policy" "security" {
 }
 
 resource "aws_cloudfront_distribution" "this" {
+  #checkov:skip=CKV_AWS_310:Single private S3 origin is intentional for this short-lived static-site project; origin failover is out of scope.
+  #checkov:skip=CKV_AWS_68:CloudFront Free pricing plan automatically requires and associates an AWS WAF Web ACL outside Terraform ownership.
+  #checkov:skip=CKV_AWS_86:CloudFront access logs are not available on the Free pricing tier; accepted cost constraint for this portfolio project.
+  #checkov:skip=CKV2_AWS_47:The pricing-plan-managed WAF is not represented in Terraform, so Checkov cannot inspect its managed rule configuration.
   enabled             = true
   aliases             = [var.domain_name]
   default_root_object = "index.html"

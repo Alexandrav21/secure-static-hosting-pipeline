@@ -1,4 +1,5 @@
 resource "aws_sns_topic" "alerts" {
+  #checkov:skip=CKV_AWS_26:SNS encryption would require a separate customer-managed KMS key in us-east-1 for CloudWatch alarm compatibility; omitted for this short-lived cost-conscious project.
   name = "secure-static-site-alerts"
 }
 
