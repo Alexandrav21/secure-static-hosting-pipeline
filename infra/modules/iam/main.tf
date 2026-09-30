@@ -157,9 +157,13 @@ data "aws_iam_policy_document" "terraform_plan" {
     actions = [
       "acm:DescribeCertificate",
       "acm:ListCertificates",
+      "acm:ListTagsForCertificate",
 
       "cloudfront:GetDistribution",
       "cloudfront:ListDistributions",
+      "cloudfront:GetOriginAccessControl",
+      "cloudfront:ListCachePolicies",
+      "cloudfront:ListResponseHeadersPolicies",
 
       "iam:GetRole",
       "iam:GetRolePolicy",
@@ -172,6 +176,7 @@ data "aws_iam_policy_document" "terraform_plan" {
       "kms:GetKeyPolicy",
       "kms:GetKeyRotationStatus",
       "kms:ListAliases",
+      "kms:ListResourceTags",
 
       "route53:GetHostedZone",
       "route53:ListResourceRecordSets",
@@ -187,6 +192,7 @@ data "aws_iam_policy_document" "terraform_plan" {
 
       "sns:GetTopicAttributes",
       "sns:ListTopics",
+      "sns:ListTagsForResource",
 
       "cloudwatch:DescribeAlarms",
     ]
