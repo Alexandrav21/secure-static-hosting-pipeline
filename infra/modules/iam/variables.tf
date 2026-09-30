@@ -28,3 +28,9 @@ variable "cloudfront_distribution_arn" {
   description = "ARN of the CloudFront distribution."
   type        = string
 }
+
+variable "terraform_plan_branch" {
+  description = "GitHub branch allowed to assume the Terraform plan role."
+  type        = string
+  default     = "main"
+}

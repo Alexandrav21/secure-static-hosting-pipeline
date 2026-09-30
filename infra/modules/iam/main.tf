@@ -106,3 +106,98 @@ resource "aws_iam_role_policy" "github_actions_deploy" {
   role   = aws_iam_role.github_actions.id
   policy = data.aws_iam_policy_document.github_actions_deploy.json
 }
+
+data "aws_iam_policy_document" "terraform_plan_trust" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type = "Federated"
+
+      identifiers = [
+        data.aws_iam_openid_connect_provider.github.arn,
+      ]
+    }
+
+    actions = [
+      "sts:AssumeRoleWithWebIdentity",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+
+      values = [
+        "sts.amazonaws.com",
+      ]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+
+      values = [
+        "repo:${var.github_owner}@122618599/${var.github_repository}@1354663866:ref:refs/heads/${var.terraform_plan_branch}",
+      ]
+    }
+  }
+}
+
+resource "aws_iam_role" "terraform_plan" {
+  name               = "SecureStaticSiteTerraformPlanRole"
+  assume_role_policy = data.aws_iam_policy_document.terraform_plan_trust.json
+}
+
+data "aws_iam_policy_document" "terraform_plan" {
+  statement {
+    sid    = "ReadTerraformInfrastructure"
+    effect = "Allow"
+
+    actions = [
+      "acm:DescribeCertificate",
+      "acm:ListCertificates",
+
+      "cloudfront:GetDistribution",
+      "cloudfront:ListDistributions",
+
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:GetOpenIDConnectProvider",
+      "iam:ListOpenIDConnectProviders",
+
+      "kms:DescribeKey",
+      "kms:GetKeyPolicy",
+      "kms:GetKeyRotationStatus",
+      "kms:ListAliases",
+
+      "route53:GetHostedZone",
+      "route53:ListResourceRecordSets",
+      "route53:ListHostedZones",
+
+      "s3:GetBucketLocation",
+      "s3:GetBucketPolicy",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:GetEncryptionConfiguration",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetBucketVersioning",
+      "s3:ListAllMyBuckets",
+
+      "sns:GetTopicAttributes",
+      "sns:ListTopics",
+
+      "cloudwatch:DescribeAlarms",
+    ]
+
+    resources = [
+      "*",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "terraform_plan" {
+  name   = "SecureStaticSiteTerraformPlanPolicy"
+  role   = aws_iam_role.terraform_plan.id
+  policy = data.aws_iam_policy_document.terraform_plan.json
+}
