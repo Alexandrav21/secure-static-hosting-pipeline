@@ -151,6 +151,7 @@ resource "aws_iam_role" "terraform_plan" {
 
 data "aws_iam_policy_document" "terraform_plan" {
   #checkov:skip=CKV_AWS_356:Read-only Terraform plan role requires wildcard resource scope for AWS discovery APIs; write/state permissions are separately scoped to required resources.
+
   statement {
     sid    = "ReadTerraformInfrastructure"
     effect = "Allow"
@@ -163,7 +164,9 @@ data "aws_iam_policy_document" "terraform_plan" {
       "cloudfront:GetDistribution",
       "cloudfront:ListDistributions",
       "cloudfront:GetOriginAccessControl",
+      "cloudfront:GetCachePolicy",
       "cloudfront:ListCachePolicies",
+      "cloudfront:GetResponseHeadersPolicy",
       "cloudfront:ListResponseHeadersPolicies",
 
       "iam:GetRole",
@@ -194,12 +197,27 @@ data "aws_iam_policy_document" "terraform_plan" {
       "sns:GetTopicAttributes",
       "sns:ListTopics",
       "sns:ListTagsForResource",
+      "sns:GetSubscriptionAttributes",
 
       "cloudwatch:DescribeAlarms",
     ]
 
     resources = [
       "*",
+    ]
+  }
+
+  statement {
+    sid    = "ListProjectBuckets"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      var.site_bucket_arn,
+      "arn:aws:s3:::secure-static-site-logs-lexi",
     ]
   }
 
