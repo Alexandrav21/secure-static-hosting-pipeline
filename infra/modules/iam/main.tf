@@ -138,6 +138,7 @@ data "aws_iam_policy_document" "terraform_plan_trust" {
 
       values = [
         "repo:${var.github_owner}@122618599/${var.github_repository}@1354663866:ref:refs/heads/${var.terraform_plan_branch}",
+        "repo:${var.github_owner}@122618599/${var.github_repository}@1354663866:pull_request",
       ]
     }
   }
@@ -192,6 +193,58 @@ data "aws_iam_policy_document" "terraform_plan" {
 
     resources = [
       "*",
+    ]
+  }
+
+  statement {
+    sid    = "ListTerraformStateBucket"
+    effect = "Allow"
+
+    actions = [
+      "s3:ListBucket",
+    ]
+
+    resources = [
+      "arn:aws:s3:::secure-static-site-tfstate-lexi",
+    ]
+
+    condition {
+      test     = "StringEquals"
+      variable = "s3:prefix"
+
+      values = [
+        "secure-static-site/terraform.tfstate",
+        "secure-static-site/terraform.tfstate.tflock",
+      ]
+    }
+  }
+
+  statement {
+    sid    = "ReadWriteTerraformState"
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::secure-static-site-tfstate-lexi/secure-static-site/terraform.tfstate",
+    ]
+  }
+
+  statement {
+    sid    = "ManageTerraformStateLock"
+    effect = "Allow"
+
+    actions = [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject",
+    ]
+
+    resources = [
+      "arn:aws:s3:::secure-static-site-tfstate-lexi/secure-static-site/terraform.tfstate.tflock",
     ]
   }
 }
