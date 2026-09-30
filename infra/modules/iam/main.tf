@@ -150,6 +150,7 @@ resource "aws_iam_role" "terraform_plan" {
 }
 
 data "aws_iam_policy_document" "terraform_plan" {
+  #checkov:skip=CKV_AWS_356:Read-only Terraform plan role requires wildcard resource scope for AWS discovery APIs; write/state permissions are separately scoped to required resources.
   statement {
     sid    = "ReadTerraformInfrastructure"
     effect = "Allow"
