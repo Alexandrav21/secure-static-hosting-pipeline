@@ -23,16 +23,26 @@ jobs:
           python-version: "3.x"
 
       - name: Install Checkov
-        run: pip install checkov
+        run: |
+          set -euxo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install checkov
 
       - name: Scan Terraform with Checkov
-        run: checkov -d infra --framework terraform
+        run: |
+          set -euxo pipefail
+          checkov --version
+          checkov -d infra --framework terraform
 
       - name: Install Semgrep
-        run: python -m pip install semgrep
+        run: |
+          set -euxo pipefail
+          python -m pip install semgrep
 
       - name: Run Semgrep
         run: |
+          set -euxo pipefail
+          semgrep --version
           semgrep scan \
             --config p/security-audit \
             --config p/owasp-top-ten \
