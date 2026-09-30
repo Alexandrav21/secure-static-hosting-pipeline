@@ -28,6 +28,21 @@ jobs:
       - name: Scan Terraform with Checkov
         run: checkov -d infra --framework terraform
 
+      - name: Install Semgrep
+        run: python -m pip install semgrep
+
+      - name: Run Semgrep
+        run: |
+          semgrep scan \
+            --config p/security-audit \
+            --config p/owasp-top-ten \
+            --error
+
+      - name: Scan for secrets
+        uses: gitleaks/gitleaks-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Scan repository with Grype
         uses: anchore/scan-action@v7
         with:
