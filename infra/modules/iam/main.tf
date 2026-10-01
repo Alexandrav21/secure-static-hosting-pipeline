@@ -149,101 +149,12 @@ resource "aws_iam_role" "terraform_plan" {
   assume_role_policy = data.aws_iam_policy_document.terraform_plan_trust.json
 }
 
-data "aws_iam_policy_document" "terraform_plan" {
-  #checkov:skip=CKV_AWS_356:Read-only Terraform plan role requires wildcard resource scope for AWS discovery APIs; write/state permissions are separately scoped to required resources.
+resource "aws_iam_role_policy_attachment" "terraform_plan_read_only" {
+  role       = aws_iam_role.terraform_plan.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
 
-  statement {
-    sid    = "ReadTerraformInfrastructure"
-    effect = "Allow"
-
-    actions = [
-      "acm:DescribeCertificate",
-      "acm:ListCertificates",
-      "acm:ListTagsForCertificate",
-
-      "cloudfront:GetDistribution",
-      "cloudfront:ListDistributions",
-      "cloudfront:GetOriginAccessControl",
-      "cloudfront:GetCachePolicy",
-      "cloudfront:ListCachePolicies",
-      "cloudfront:GetResponseHeadersPolicy",
-      "cloudfront:ListResponseHeadersPolicies",
-
-      "iam:GetRole",
-      "iam:GetRolePolicy",
-      "iam:ListRolePolicies",
-      "iam:ListAttachedRolePolicies",
-      "iam:GetOpenIDConnectProvider",
-      "iam:ListOpenIDConnectProviders",
-
-      "kms:DescribeKey",
-      "kms:GetKeyPolicy",
-      "kms:GetKeyRotationStatus",
-      "kms:ListAliases",
-      "kms:ListResourceTags",
-
-      "route53:GetHostedZone",
-      "route53:ListResourceRecordSets",
-      "route53:ListHostedZones",
-
-      "s3:ListAllMyBuckets",
-
-      "sns:GetTopicAttributes",
-      "sns:ListTopics",
-      "sns:ListTagsForResource",
-      "sns:GetSubscriptionAttributes",
-
-      "cloudwatch:DescribeAlarms",
-    ]
-
-    resources = [
-      "*",
-    ]
-  }
-
-  statement {
-    sid    = "ReadCloudFrontDistribution"
-    effect = "Allow"
-
-    actions = [
-      "cloudfront:ListTagsForResource",
-    ]
-
-    resources = [
-      var.cloudfront_distribution_arn,
-    ]
-  }
-
-  statement {
-    sid    = "ReadProjectBuckets"
-    effect = "Allow"
-
-    actions = [
-      "s3:ListBucket",
-      "s3:GetBucketAcl",
-      "s3:GetBucketCORS",
-      "s3:GetBucketLocation",
-      "s3:GetBucketLogging",
-      "s3:GetBucketObjectLockConfiguration",
-      "s3:GetBucketOwnershipControls",
-      "s3:GetBucketPolicy",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:GetBucketRequestPayment",
-      "s3:GetBucketTagging",
-      "s3:GetBucketVersioning",
-      "s3:GetBucketWebsite",
-      "s3:GetEncryptionConfiguration",
-      "s3:GetLifecycleConfiguration",
-      "s3:GetReplicationConfiguration",
-      "s3:GetAccelerateConfiguration",
-    ]
-
-    resources = [
-      var.site_bucket_arn,
-      "arn:aws:s3:::secure-static-site-logs-lexi",
-    ]
-  }
-
+data "aws_iam_policy_document" "terraform_plan_backend" {
   statement {
     sid    = "ListTerraformStateBucket"
     effect = "Allow"
@@ -297,8 +208,8 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 }
 
-resource "aws_iam_role_policy" "terraform_plan" {
-  name   = "SecureStaticSiteTerraformPlanPolicy"
+resource "aws_iam_role_policy" "terraform_plan_backend" {
+  name   = "SecureStaticSiteTerraformBackendPolicy"
   role   = aws_iam_role.terraform_plan.id
-  policy = data.aws_iam_policy_document.terraform_plan.json
+  policy = data.aws_iam_policy_document.terraform_plan_backend.json
 }
