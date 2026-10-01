@@ -11,13 +11,22 @@ permissions:
 
 jobs:
   drift:
+    name: Check Terraform drift
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: infra
+
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_VAR_sns_email: ${{ secrets.SNS_EMAIL }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4
         with:
           terraform_version: "1.15.6"
@@ -29,15 +38,57 @@ jobs:
           role-to-assume: arn:aws:iam::445567089145:role/SecureStaticSiteTerraformPlanRole
           aws-region: eu-central-1
 
-      - name: Initialize Terraform
-        working-directory: infra
-        env:
-          TF_VAR_sns_email: ${{ secrets.SNS_EMAIL }}
-        run: terraform init
+      - name: Terraform init
+        run: terraform init -input=false
 
-      - name: Check for drift
-        working-directory: infra
-        env:
-          TF_VAR_sns_email: ${{ secrets.SNS_EMAIL }}
+      - name: Create refresh-only plan
         run: |
-          terraform plan -refresh-only -detailed-exitcode
+          terraform plan \
+            -refresh-only \
+            -input=false \
+            -no-color \
+            -out=tfplan
+
+      - name: Analyse drift
+        shell: bash
+        run: |
+          terraform show -json tfplan > tfplan.json
+
+          DRIFT_COUNT="$(
+            jq '
+              (.resource_drift // [])
+              | map(select(.change.actions != ["no-op"]))
+              | length
+            ' tfplan.json
+          )"
+
+          echo "Drifted resources: ${DRIFT_COUNT}"
+
+          if [ "${DRIFT_COUNT}" -gt 0 ]; then
+            {
+              echo "## Terraform drift detected"
+              echo
+              echo "Terraform detected ${DRIFT_COUNT} resource(s) changed outside Terraform."
+              echo
+              jq -r '
+                (.resource_drift // [])[]
+                | select(.change.actions != ["no-op"])
+                | "- `\(.address)` — \(.change.actions | join(", "))"
+              ' tfplan.json
+            } >> "$GITHUB_STEP_SUMMARY"
+
+            echo "Terraform drift detected."
+            exit 1
+          fi
+
+          {
+            echo "## No Terraform drift detected"
+            echo
+            echo "The deployed AWS resources match the Terraform state."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "No drift detected."
+
+      - name: Clean up plan files
+        if: always()
+        run: rm -f tfplan tfplan.json
