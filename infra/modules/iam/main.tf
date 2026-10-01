@@ -186,12 +186,6 @@ data "aws_iam_policy_document" "terraform_plan" {
       "route53:ListResourceRecordSets",
       "route53:ListHostedZones",
 
-      "s3:GetBucketLocation",
-      "s3:GetBucketPolicy",
-      "s3:GetBucketPublicAccessBlock",
-      "s3:GetEncryptionConfiguration",
-      "s3:GetLifecycleConfiguration",
-      "s3:GetBucketVersioning",
       "s3:ListAllMyBuckets",
 
       "sns:GetTopicAttributes",
@@ -208,11 +202,27 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 
   statement {
-    sid    = "ListProjectBuckets"
+    sid    = "ReadProjectBuckets"
     effect = "Allow"
 
     actions = [
       "s3:ListBucket",
+      "s3:GetBucketAcl",
+      "s3:GetBucketCORS",
+      "s3:GetBucketLocation",
+      "s3:GetBucketLogging",
+      "s3:GetBucketObjectLockConfiguration",
+      "s3:GetBucketOwnershipControls",
+      "s3:GetBucketPolicy",
+      "s3:GetBucketPublicAccessBlock",
+      "s3:GetBucketRequestPayment",
+      "s3:GetBucketTagging",
+      "s3:GetBucketVersioning",
+      "s3:GetBucketWebsite",
+      "s3:GetEncryptionConfiguration",
+      "s3:GetLifecycleConfiguration",
+      "s3:GetReplicationConfiguration",
+      "s3:GetAccelerateConfiguration",
     ]
 
     resources = [
