@@ -202,6 +202,19 @@ data "aws_iam_policy_document" "terraform_plan" {
   }
 
   statement {
+    sid    = "ReadCloudFrontDistribution"
+    effect = "Allow"
+
+    actions = [
+      "cloudfront:ListTagsForResource",
+    ]
+
+    resources = [
+      var.cloudfront_distribution_arn,
+    ]
+  }
+
+  statement {
     sid    = "ReadProjectBuckets"
     effect = "Allow"
 
