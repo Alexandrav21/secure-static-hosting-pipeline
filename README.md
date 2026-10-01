@@ -4,7 +4,7 @@ A security-first and cost-conscious static website hosting pipeline on AWS, buil
 
 The project started from a simple goal: host a static website securely using a private S3 bucket and CloudFront.
 
-I deliberately took it further into a small **DevSecOps-style infrastructure project**, adding secure GitHub OIDC authentication, automated security scanning, immutable GitHub Actions references, Terraform testing, deployment previews, drift detection, monitoring and a documented teardown process.
+I deliberately took it further into a **DevSecOps-style infrastructure project**, adding secure GitHub OIDC authentication, automated security scanning, immutable GitHub Actions references, Terraform testing, deployment previews, drift detection, monitoring and a documented teardown process.
 
 The infrastructure is intentionally small and short-lived. Every component has a reason for being there, and unnecessary paid services were avoided.
 
@@ -99,6 +99,11 @@ secure-static-hosting-pipeline/
 │       ├── plan.yml
 │       └── security.yml
 │
+├── assets/
+│   ├── architecture/
+│   └── cicd/
+│
+│
 ├── .githooks/
 │   └── pre-commit
 │
@@ -141,7 +146,7 @@ The structure keeps deployment logic, infrastructure, testing and local tooling 
 
 ## Architecture
 
-> The architecture diagram will be added separately once the implementation is complete.
+![Architecture Diagram](assets/architecture/architecture-diagram.png)
 
 The request path is:
 
@@ -359,10 +364,12 @@ Rather than upgrading the distribution solely to satisfy a scanner, this limitat
 
 # 6. Infrastructure as Code with Terraform
 
-The infrastructure is managed with **Terraform**, split into logical modules:
+The infrastructure is managed with **Terraform** and split into logical modules, with root-level configuration files for providers, variables, outputs, remote state and project-wide settings.
 
 ```text
 infra/
+├── bootstrap/
+│
 ├── modules/
 │   ├── acm/
 │   ├── cloudfront/
@@ -371,8 +378,18 @@ infra/
 │   ├── monitoring/
 │   ├── route53/
 │   └── s3/
-├── bootstrap/
-└── main.tf
+│
+├── tests/
+│   └── security.tftest.hcl
+│
+├── backend.tf
+├── main.tf
+├── outputs.tf
+├── providers.tf
+├── terraform.tfvars
+├── variables.tf
+├── versions.tf
+└── .terraform.lock.hcl
 ```
 
 The modular structure keeps related infrastructure together without creating a separate module for every individual AWS resource.
@@ -413,13 +430,15 @@ The deployment role is restricted to the specific repository and main branch, wh
 
 ## Immutable GitHub Actions references
 
-Semgrep identified mutable GitHub Actions references during development.
+**Semgrep** identified mutable GitHub Actions references during development.
 
 Workflow actions such as `actions/checkout`, Terraform setup, TFLint, Gitleaks and Grype were therefore pinned to immutable commit SHAs while retaining the human-readable version as an inline comment.
 
 Dependabot is configured with a seven-day cooldown for GitHub Actions updates.
 
 This adds supply-chain protection while still allowing dependency updates to be maintained automatically.
+
+![Dependabot](assets/cicd/dependabot.png)
 
 ## Build validation
 
@@ -439,6 +458,8 @@ Terraform validation
 TFLint
 ```
 
+![Terraform Build](assets/cicd/terraform-build.png)
+
 ## Security pipeline
 
 The Security workflow performs several independent security checks:
@@ -455,6 +476,30 @@ Grype
 
 This provides IaC scanning, static analysis, secret detection and vulnerability scanning without introducing a container build requirement.
 
+![Terraform Security](assets/cicd/terraform-security.png)
+
+## Site deployment
+
+The Deploy workflow publishes the static site securely to AWS:
+
+```text
+GitHub Actions
+    ↓
+Authenticate to AWS using OIDC
+    ↓
+Assume dedicated deployment role
+    ↓
+Sync site content to private S3 bucket
+    ↓
+Encrypt uploaded objects with SSE-KMS
+    ↓
+Create CloudFront cache invalidation
+    ↓
+Updated site served through CloudFront
+```
+
+![Terraform Deploy](assets/cicd/terraform-deploy.png)
+
 ## Terraform plan preview
 
 `plan.yml` runs for pull requests affecting the infrastructure and uses the dedicated read-only Terraform role.
@@ -462,6 +507,8 @@ This provides IaC scanning, static analysis, secret detection and vulnerability 
 The plan workflow can access the real remote state but has no deployment permissions.
 
 This provides a reviewable preview before infrastructure changes are merged.
+
+![Terraform plan on a PR](assets/cicd/terraform-plan.png)
 
 ## Terraform drift detection
 
@@ -483,9 +530,104 @@ The exit codes are interpreted as:
 
 A manual `workflow_dispatch` trigger is also provided for an on-demand drift check.
 
+![Terraform drift](assets/cicd/terraform-drift.png)
+
 ---
 
-# 8. Local Development and Pre-Commit Checks
+# 8. Monitoring and Alerting
+
+Operational monitoring uses CloudWatch and SNS.
+
+The current alerting path is:
+
+```text
+CloudFront metric
+      ↓
+CloudWatch alarm
+      ↓
+SNS
+      ↓
+Email
+```
+
+The monitored CloudFront failure metric is the `5xxErrorRate` alarm.
+
+The email address is supplied through environment configuration or the GitHub repository secret rather than stored in Git.
+
+The monitoring configuration is intentionally small to avoid alert noise and unnecessary operational complexity.
+
+---
+
+# 9. Getting Started
+
+## Prerequisites
+
+You will need:
+
+- Git
+- Terraform
+- AWS CLI
+- pnpm
+- an AWS account with the required permissions
+- GitHub access for the repository and Actions configuration
+
+VS Code is recommended but not required.
+
+## Clone the repository
+
+```bash
+git clone https://github.com/Alexandrav21/secure-static-hosting-pipeline.git
+cd secure-static-hosting-pipeline
+```
+
+## Configure local Git hooks
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook will then run automatically when committing changes.
+
+## Configure local AWS access
+
+Use an existing AWS CLI profile rather than storing credentials in the repository:
+
+```bash
+export AWS_PROFILE=secure-static-site
+export TF_VAR_sns_email="your-email@example.com"
+```
+
+## Run local checks
+
+```bash
+pnpm install
+pnpm lint
+```
+
+Run the site integrity test directly with:
+
+```bash
+./scripts/check-site-integrity.sh
+```
+
+Run Terraform validation from `infra/`:
+
+```bash
+terraform init
+terraform fmt -check -recursive
+terraform validate
+terraform plan
+```
+
+Native Terraform tests can be run with:
+
+```bash
+terraform test
+```
+
+---
+
+# 10. Local Development and Pre-Commit Checks
 
 The repository includes a `.githooks/pre-commit` hook so local checks happen automatically when committing.
 
@@ -517,9 +659,28 @@ The `.yamllint.yml` configuration is kept at the repository root and applies to 
 
 ---
 
-# 9. Troubleshooting and Lessons Learned
+# 11. Branch protection
 
-A significant part of this project was dealing with real AWS and GitHub Actions behaviour rather than simply following a happy-path tutorial.
+The `main` branch is protected using GitHub repository rules.
+
+Changes must be made through a pull request rather than pushed directly to `main`, and the required CI checks must pass before merging.
+
+The protection includes:
+
+- pull requests required before merge;
+- Build and Security checks required to pass;
+- branches required to be up to date before merge;
+- conversations resolved before merge;
+- force pushes blocked;
+- branch deletion protected.
+
+Because this is a solo-maintained portfolio project, an external approval is not required. Terraform Plan still runs automatically for infrastructure-related pull requests to provide a deployment preview before changes are merged.
+
+---
+
+# 12. Troubleshooting and Lessons Learned
+
+A significant part of this project was dealing with real AWS and GitHub Actions behaviour rather than simply following a happy-path.
 
 ## CloudFront pricing-plan constraints
 
@@ -623,129 +784,6 @@ Where appropriate, these were handled with narrow resource-level Checkov suppres
 
 ---
 
-# 10. Monitoring and Alerting
-
-Operational monitoring uses CloudWatch and SNS.
-
-The current alerting path is:
-
-```text
-CloudFront metric
-      ↓
-CloudWatch alarm
-      ↓
-SNS
-      ↓
-Email
-```
-
-The monitored CloudFront failure metric is the `5xxErrorRate` alarm.
-
-The email address is supplied through environment configuration or the GitHub repository secret rather than stored in Git.
-
-The monitoring configuration is intentionally small to avoid alert noise and unnecessary operational complexity.
-
----
-
-# 11. Getting Started
-
-## Prerequisites
-
-You will need:
-
-- Git
-- Terraform
-- AWS CLI
-- pnpm
-- an AWS account with the required permissions
-- GitHub access for the repository and Actions configuration
-
-VS Code is recommended but not required.
-
-## Clone the repository
-
-```bash
-git clone https://github.com/Alexandrav21/secure-static-hosting-pipeline.git
-cd secure-static-hosting-pipeline
-```
-
-## Configure local Git hooks
-
-```bash
-git config core.hooksPath .githooks
-```
-
-The pre-commit hook will then run automatically when committing changes.
-
-## Configure local AWS access
-
-Use an existing AWS CLI profile rather than storing credentials in the repository:
-
-```bash
-export AWS_PROFILE=secure-static-site
-export TF_VAR_sns_email="your-email@example.com"
-```
-
-## Run local checks
-
-```bash
-pnpm install
-pnpm lint
-```
-
-Run the site integrity test directly with:
-
-```bash
-./scripts/check-site-integrity.sh
-```
-
-Run Terraform validation from `infra/`:
-
-```bash
-terraform init
-terraform fmt -check -recursive
-terraform validate
-terraform plan
-```
-
-Native Terraform tests can be run with:
-
-```bash
-terraform test
-```
-
----
-
-# 12. Deployment Workflow
-
-Infrastructure changes follow:
-
-```text
-Create branch
-    ↓
-Make changes
-    ↓
-Pre-commit checks
-    ↓
-Open pull request
-    ↓
-Build + Security + Terraform Plan
-    ↓
-Review
-    ↓
-Merge to main
-    ↓
-Deploy
-    ↓
-HTTPS verification
-```
-
-The deployment workflow authenticates to AWS through GitHub OIDC and uses the deployment role only after code has passed the required checks.
-
-The Terraform plan workflow is intentionally separate from deployment so infrastructure can be reviewed before it is applied.
-
----
-
 # 13. Cleanup and Teardown
 
 This project is intentionally short-lived. When the review period is finished, chargeable resources should be removed rather than left running indefinitely.
@@ -761,7 +799,7 @@ The bootstrap/state resources are handled separately because the Terraform backe
 
 ---
 
-# 15. Future Improvements
+# 14. Future Improvements
 
 If this project were extended beyond its short-lived portfolio scope, possible next steps would include:
 
