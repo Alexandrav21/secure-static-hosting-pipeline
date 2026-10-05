@@ -2,6 +2,7 @@ site_bucket_name = "secure-static-site-lexi"
 log_bucket_name  = "secure-static-site-logs-lexi"
 allowed_countries = [
   "RO",
+  "GB"
 ]
 github_owner      = "Alexandrav21"
 github_repository = "secure-static-hosting-pipeline"
